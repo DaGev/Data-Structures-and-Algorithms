@@ -84,3 +84,187 @@ class BST {
         /* test14 */
         void remove_vertex(const string&); // delete the given vertex from bst -- note that, all incident edges of the vertex should be deleted as well.
 };
+
+/* test1 */
+template <typename T>
+BST<T>::BST() {
+    tree.resize(10);
+    in_tree.resize(10, false);
+    num_ver = 0;
+    num_edg = 0;
+    sum_w = 0;
+}
+
+template <typename T>
+BST<T>::~BST() {}
+
+template <typename T>
+size_t BST<T>::num_vertices() {
+    return num_ver;
+}
+
+template <typename T>
+size_t BST<T>::num_edges() {
+    return num_edg;
+}
+
+template <typename T>
+T BST<T>::sum_weight() {
+    return sum_w;
+}
+
+/* test2 */
+template <typename T>
+void BST<T>::add_vertex(const string& u, const T& w) {
+    Node vertex;
+    vertex.name = u;
+    vertex.weight = w;
+
+    if (contains(u) == false){
+        int pos = 0;
+
+        while (pos < tree.size() && in_tree[pos]){
+            if (w < tree[pos].weight) pos = 2 * pos + 1;
+            else pos = 2 * pos + 2;
+        }
+
+        while (pos >= tree.size()){
+            tree.resize(2*tree.size());
+            in_tree.resize(2*in_tree.size(), false);
+        }
+        tree[pos] = vertex; // store the vertex in the position
+        in_tree[pos] = true; // set that position as occupied
+
+        num_ver++;
+        if (num_ver > 1) num_edg++;
+        sum_w += w;
+    }   
+}
+
+template <typename T>
+bool BST<T>::contains(const string& u) {
+    for (int i = 0; i < tree.size(); i++){
+        if(in_tree[i]) if (tree[i].name == u) return true;
+    }
+    return false;
+}
+
+/* test3 */
+template <typename T>
+vector<string> BST<T>::get_vertices() {
+    vector<string> vertices; // create a vector
+
+    for (int i = 0; i < tree.size(); i++){
+        if(in_tree[i]) vertices.push_back(tree[i].name); // if it's in the tree, push its string into the tree
+    }
+    return vertices;
+}
+
+template <typename T>
+vector<string> BST<T>::get_leaves() {
+    vector<string> vertices; // create a vector;
+
+    for (int i = 0; i < tree.size(); i++){
+        if(in_tree[i]){ // if it's in the tree and both of it's sides are empty, it's a leaf, so add its string to the vector
+            if(in_tree[2*i+1] == false && in_tree[2*i+2] == false) vertices.push_back(tree[i].name);
+        }
+    }
+    return vertices;
+}
+
+/* test4 */
+template <typename T>
+int BST<T>::get_pos(const string& u){ // helper to get the postion in the vector of a given name of a node
+    
+    if(contains(u)){
+        for(int i = 0; i < tree.size(); i++){
+            if (in_tree[i]){
+                if(tree[i].name == u) return i;
+            }
+        }
+    }
+    return 0;
+}
+
+template <typename T>
+bool BST<T>::adjacent(const string& u, const string& v) { // if v is a right or left child of u OR u is a right or left child of u, return true
+    if ((get_pos(v) == 2 * get_pos(u) + 1 || get_pos(v) == 2 * get_pos(u) + 2) || (get_pos(u) == 2 * get_pos(v) + 1 || get_pos(u) == 2 * get_pos(v) + 2)) return true;
+    return false;
+}
+
+/* test5 */
+template <typename T>
+vector<pair<string,string>> BST<T>::get_edges() {
+    vector<pair<string, string>> edges;
+
+    for(int i = 0; i < tree.size(); i++){ // for every position in the tree vector
+        if(in_tree[i]){ // if it is not empty, check if it has children
+            if(in_tree[2*i+1]){ // if it has a left child, add it and it's left child to the list of edges
+                pair<string,string> my_pair;
+                my_pair.first = tree[i].name;
+                my_pair.second = tree[2*i+1].name;
+                edges.push_back(my_pair);
+            }
+            if(in_tree[2*i+2]){ // if it has a right child, add it and it's right child to the list of edges
+                pair<string,string> my_pair;
+                my_pair.first = tree[i].name;
+                my_pair.second = tree[2*i+2].name;
+                edges.push_back(my_pair);
+            }
+        }
+    }
+    return edges;
+}
+
+/* test6 */
+template <typename T>
+int BST<T>::get_parent_pos(const string& u){ // returns the parent position of a given node
+    int u_pos = get_pos(u);
+
+    if(u_pos == 0) return 0;
+    if(u_pos % 2 == 0) return ((u_pos - 2) / 2);
+    else return ((u_pos - 1) / 2);
+}
+
+template <typename T>
+vector<string> BST<T>::get_neighbours(const string& u) {
+    vector<string> neighbours;
+
+    int u_pos = get_pos(u);
+    if(in_tree[u_pos]){ // if something exists in that position
+        if(u_pos != 0){ // if it's not the root
+            int u_parent_pos = get_parent_pos(u);
+            neighbours.push_back(tree[u_parent_pos].name); // add their parent to the vector
+        }
+        if(in_tree[2*u_pos+1]){ // if it has a left child
+            neighbours.push_back(tree[2*u_pos+1].name); // add their left kid to the vector
+        }
+        if(in_tree[2*u_pos+2]){ // if it has a right child
+            neighbours.push_back(tree[2*u_pos+2].name); // add their right child to the vector
+        }
+    }
+    return neighbours;
+}
+
+template <typename T>
+size_t BST<T>::degree(const string& u) {
+    return get_neighbours(u).size();
+}
+
+/* test7 */
+template <typename T> // recursive helper function
+void BST<T>::preorder(int u_pos, vector<string>& preordered_tree){ 
+    if(in_tree[u_pos]){
+        preordered_tree.push_back(tree[u_pos].name); // first, push to the vector
+        if(in_tree[(2*u_pos+1)]) preorder((2*u_pos+1), preordered_tree); // if left exists, do the same for it
+        if(in_tree[(2*u_pos+2)]) preorder((2*u_pos+2), preordered_tree); // if right exists, do the same for it
+    }
+}
+
+template <typename T>
+vector<string> BST<T>::preorder_traversal() {
+    vector<string> preordered_tree;
+
+    if(in_tree[0]) preorder(0, preordered_tree); // if root, exists, start from it
+    return preordered_tree;
+}
