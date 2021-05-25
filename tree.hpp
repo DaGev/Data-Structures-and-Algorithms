@@ -268,3 +268,131 @@ vector<string> BST<T>::preorder_traversal() {
     if(in_tree[0]) preorder(0, preordered_tree); // if root, exists, start from it
     return preordered_tree;
 }
+/* test8 */
+template <typename T> // recursive helper function
+void BST<T>::inorder(int u_pos, vector<string>& inordered_tree){ 
+    if(in_tree[u_pos]){
+        if(in_tree[2*u_pos+1]) inorder(2*u_pos+1, inordered_tree); // if left exists, go there
+        inordered_tree.push_back(tree[u_pos].name); // push to the vector
+        if(in_tree[2*u_pos+2]) inorder(2*u_pos+2, inordered_tree); // if right exists, recur
+    }
+}
+
+template <typename T>
+vector<string> BST<T>::inorder_traversal() {
+    vector<string> inordered_tree;
+
+    if(in_tree[0]) inorder(0, inordered_tree); // if root, exists, start from it
+    return inordered_tree;
+}
+
+/* test9 */
+template <typename T> // recursive helper function
+void BST<T>::postorder(int u_pos, vector<string>& postordered_tree){ 
+    if(in_tree[u_pos]){
+        if(in_tree[2*u_pos+1]) postorder(2*u_pos+1, postordered_tree); // if left exists, go there
+        if(in_tree[2*u_pos+2]) postorder(2*u_pos+2, postordered_tree); // if right exists, recur
+        postordered_tree.push_back(tree[u_pos].name); // push to the vector
+    }
+}
+
+template <typename T>
+vector<string> BST<T>::postorder_traversal() {
+    vector<string> postordered_tree;
+
+    if(in_tree[0]) postorder(0, postordered_tree); // if root, exists, start from it
+    return postordered_tree;
+}
+
+/* test10 */
+template <typename T>
+vector<string> BST<T>::breadth_first_traversal() {
+    vector<string> level_traversed;
+    for(int i = 0; i < tree.size(); i++){ // for every node in the tree
+        if(in_tree[i]) level_traversed.push_back(tree[i].name); // push it to the vector level by level
+    }
+    return level_traversed;
+}
+
+/* test11 */
+template <typename T>
+bool BST<T>::get_path(int root, vector<string>& path, int u_pos){
+
+    if(!in_tree[root]) return false; // if no root, there is no path
+    path.push_back(tree[root].name); // add node to path
+
+    if(tree[root].name == tree[u_pos].name) return true; // if it's the required one, return true
+    if (get_path((2*root+1), path, u_pos) || get_path((2*root+2), path, u_pos)) return true; // if either in left or right, true
+
+    path.pop_back(); // if doesn't exist, pop
+    return false;
+}
+
+template <typename T>
+vector<string> BST<T>::path(const string& u, const string& v){
+    vector<string> path1, path2, path;
+
+    get_path(0, path1, get_pos(u)); // get path from root to u
+    get_path(0, path2, get_pos(v)); // get path from root to v
+
+    int i=0, j=0, intersectoin = - 1;
+    while (i != path1.size() || j != path2.size()){
+        if(i == j && path1[i] == path2[j]){ // move until no intersectoin is found
+            i++;
+            j++;
+        }else{
+            intersectoin = j - 1;
+            break; // exist when intersectoin found, and proceed to add them up
+        }
+    }
+    
+    for(int i = path1.size() - 1; i > intersectoin; i--) path.push_back(path1[i]); // add from last until intersection
+    for(int i = intersectoin; i < path2.size(); i++) path.push_back(path2[i]); // add from intersection until last
+
+    return path; // return in complete order
+}
+
+/* test12 */
+template <typename T>
+int BST<T>::weight(vector<string>& path) {
+    int total_weight = 0;
+
+    for(int i = 0; i < path.size(); i++){ // go through each node in the path and add up their weights
+        total_weight += tree[get_pos(path[i])].weight;
+    }
+    return total_weight;
+}
+
+template <typename T>
+vector<string> BST<T>::path_with_largest_weight(){
+
+    vector<string> path_with_largest_weight;
+
+    vector<string> leaves;
+    leaves = get_leaves();
+
+    int biggest_sum = 0, this_sum = 0;
+    vector<string> path_1;
+
+    for(int i = 0; i < leaves.size(); i++){ // compare the path weights of every leaf to leaf path
+        for(int j = i; j < leaves.size(); j++){
+            if(j != i){
+                path_1 = path(leaves[i], leaves[j]); // make a path of the leaf to leaf
+                this_sum = weight(path_1); // get their weighted sum
+                if(this_sum > biggest_sum) biggest_sum = this_sum, path_with_largest_weight = path_1; // make it the biggest if biggest thus far
+            }
+        }
+    }
+    return path_with_largest_weight;
+}
+
+/* test13 */
+template <typename T>
+size_t BST<T>::height() {
+    return size_t();
+}
+
+/* test14 */
+template <typename T>
+void BST<T>::remove_vertex(const string& u) {
+}
