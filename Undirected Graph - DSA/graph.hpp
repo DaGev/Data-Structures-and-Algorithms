@@ -241,3 +241,189 @@ size_t Graph<T>::degree(const string& u) {
     }
     return count;
 }
+
+/* test7 */
+
+// Removes an edge, if one exists, between 2 given vertices
+template <typename T>
+void Graph<T>::remove_edge(const string& u, const string& v) {
+	if(adjacent(u,v) == true){
+
+        int u_position = give_position_as_int(u);
+        int v_position = give_position_as_int(v);
+
+        adj_matrix[u_position][v_position] = 0;
+        adj_matrix[v_position][u_position] = 0;
+
+        num_edg--;
+    }
+}
+
+/* test8 */
+
+// Removes a given vertex and all of it's edges
+template <typename T>
+void Graph<T>::remove_vertex(const string& u) {
+
+    int u_pos = give_position_as_int(u);
+
+    if(contains(u) == true){
+
+        int amount_edges_removed = degree(u);
+
+        for (int i = 0; i < adj_matrix.size(); i++){
+            adj_matrix[i].erase(adj_matrix[i].begin() + u_pos);
+        }
+
+        adj_matrix.erase(adj_matrix.begin() + u_pos);
+
+        vertex.erase(vertex.begin() + u_pos);
+
+        num_ver--;
+        num_edg -= amount_edges_removed;
+    }
+}
+
+/* test9 */
+
+// Returns a vector of all the vertices in the visiting order of a depth-first traversal from the given vertex.
+template <typename T>
+vector<string> Graph<T>::depth_first_traversal(const string& u) {
+    
+    int u_pos = give_position_as_int(u);
+
+    bool visited[num_ver];
+    for(int i = 0; i < num_ver; i++){
+        visited[i] = false;
+    }
+
+    stack<int> s;
+    s.push(u_pos);
+
+    vector<string> ordered;
+
+    while(!s.empty()){
+        int n = s.top();
+        s.pop();
+        if(!visited[n]){
+            visited[n] = true;
+            ordered.push_back(vertex[n]);
+            for(int i = num_ver; i != 0; i--){
+                if (adj_matrix[n][i-1] > 0){
+                    s.push(i-1);
+                }
+            }
+        }
+    }
+
+    return ordered;
+}
+
+/* test10 */
+
+// Returns a vector of all the vertices in the visiting order of a breadth-first traversal from the given vertex.
+template <typename T>
+vector<string> Graph<T>::breadth_first_traversal(const string& u) {
+
+    int u_pos = give_position_as_int(u);
+
+    bool visited[num_ver];
+    for(int i = 0; i < num_ver; i++){
+        visited[i] = false;
+    }
+
+    queue<int> q;
+    q.push(u_pos);
+
+    vector<string> ordered;
+
+    while (!q.empty()){
+		int n = q.front();
+		q.pop();
+		if (!visited[n]){
+			visited[n] = true;
+			ordered.push_back(vertex[n]);
+			for (int i = 0; i < num_ver; i++){
+				if (adj_matrix[n][i]){
+					q.push(i);
+				}
+			}
+		}
+	}    
+
+    return ordered;
+}
+
+/* test11 */
+
+// Return true it finds a vertex that has an edge with an already visited vertex that isn't its parent
+template <typename T>
+bool Graph<T>::cycles_util(int u, bool visited[], int parent){
+    visited[u] = true;
+
+    for(int q = 0; q < num_ver; q++){
+        if (adjacent(vertex[u],vertex[q])){
+            if(!visited[q]){
+                if(cycles_util(q, visited, u)){
+                    return true;
+                }
+            }
+            else if (q != parent){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// Returns true if the graph contains a cycle
+template <typename T>
+bool Graph<T>::contain_cycles() {
+
+    bool *visited = new bool[num_ver];
+    for(int i = 0; i < num_ver; i++){
+        visited[i] = false;
+    }
+
+    for(int j = 0; j < num_ver; j++){
+        if(!visited[j]){
+            if(cycles_util(j, visited, -1)){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/* test12 */
+
+// Returns a spanning tree of the graph
+template <typename T>
+Graph<T> Graph<T>::minimum_spanning_tree() {
+
+    Graph<T> g;
+
+    vector<pair<string,string>> edges = get_edges();
+
+    vector<int> edge_weights;
+    edge_weights.resize(num_edg);
+
+    for(int i = 0; i < edge_weights.size(); i++){
+        edge_weights[i] = adj_matrix[give_position_as_int(edges[i].first)][give_position_as_int(edges[i].second)];
+    }
+
+    for(int j = 0; j < num_ver-1; j++){
+        if(!g.contains(edges[j].first)){
+            g.add_vertex(edges[j].first);
+        }
+        if(!g.contains(edges[j].second)){
+            g.add_vertex(edges[j].second);
+        }
+        g.add_edge(edges[j].first, edges[j].second, edge_weights[j]);
+        
+        if(g.contain_cycles()){
+            g.remove_edge(edges[j].first, edges[j].second);
+        }
+    }
+    return g;
+}
